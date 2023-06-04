@@ -29,8 +29,8 @@ func mainPost(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid URL", http.StatusBadRequest)
 			return
 		}
-		w.Write([]byte("Location: " + url))
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		w.Write([]byte("Location: " + url))
 	}
 }
 

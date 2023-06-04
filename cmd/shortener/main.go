@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
@@ -12,8 +13,19 @@ func mainPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			panic(err)
+			http.Error(w, fmt.Sprintf("Err: %s", err), http.StatusBadRequest)
+			return
 		}
+		if string(b) == "" {
+			http.Error(w, "Empty body!", http.StatusBadRequest)
+			return
+		}
+		url := string(b)
+		if url == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		id := randstring()
 		urls[id] = string(b)
 
@@ -26,11 +38,11 @@ func mainPost(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]
 		if !ok {
-			http.Error(w, "Invalid URL", http.StatusBadRequest)
+			http.Error(w, "Bad URL", http.StatusBadRequest)
 			return
 		}
+		w.Header().Set("Location", url)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		w.Write([]byte("Location: " + url))
 	}
 }
 

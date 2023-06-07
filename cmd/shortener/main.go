@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-var urls map[string]string
+var urls = make(map[string]string)
 
 func mainPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {

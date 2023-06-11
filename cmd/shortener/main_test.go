@@ -24,7 +24,7 @@ func TestMain(t *testing.T) {
 		wantGet  want
 	}{
 		{
-			name:   "Test post request first url",
+			name:   "Test request first url",
 			url:    "https://practicum.yandex.ru/",
 			method: http.MethodPost,
 			wantPost: want{
@@ -38,7 +38,7 @@ func TestMain(t *testing.T) {
 		},
 
 		{
-			name:   "Test post request second url",
+			name:   "Test request second url",
 			url:    "https://www.youtube.com/",
 			method: http.MethodPost,
 			wantPost: want{
@@ -57,16 +57,17 @@ func TestMain(t *testing.T) {
 			// Тест Post запроса
 			rp := httptest.NewRequest(tc.method, "https://localhost:8080", strings.NewReader(tc.url))
 			wp := httptest.NewRecorder()
-			mainPost(wp, rp)
-			postUtl := wp.Body.String()
+			newPost(wp, rp)
+			postUrl := wp.Body.String()
 
 			assert.Equal(t, tc.wantPost.code, wp.Code, "Код ответа Post не совпадает с ожидаемым")
 			assert.Equal(t, tc.wantPost.contentType, wp.Header()["Content-Type"][0], "Заголовок Post ответа не совпадает с ожидаемым")
 
 			// Тест Get запроса
-			rg := httptest.NewRequest(http.MethodGet, postUtl, nil)
+			rg := httptest.NewRequest(http.MethodGet, postUrl, nil)
 			wg := httptest.NewRecorder()
-			mainPost(wg, rg)
+
+			newGet(wg, rg)
 
 			assert.Equal(t, tc.wantGet.code, wg.Code, "Код ответа Get запроса не совпадает с ожидаемым")
 			assert.Equal(t, tc.url, wg.Header()["Location"][0], "Location в Get запросе не совпадает с ожидаемым ответом")

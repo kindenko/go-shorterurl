@@ -3,13 +3,29 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var urls = make(map[string]string)
 
-func mainPost(w http.ResponseWriter, r *http.Request) {
+func main() {
+	urls = make(map[string]string)
+
+	r := chi.NewRouter()
+	r.Route("/", func(r chi.Router) {
+		r.Post("/", newPost)
+		r.Get("/{shortUrl}", newGet)
+	})
+
+	log.Fatal(http.ListenAndServe(":8080", r))
+
+}
+
+func newPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -28,13 +44,16 @@ func mainPost(w http.ResponseWriter, r *http.Request) {
 
 		id := randstring()
 		urls[id] = string(b)
-
 		resp := "http://localhost:8080/" + id
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 
 		w.Write([]byte(resp))
-	} else if r.Method == http.MethodGet {
+	}
+}
+
+func newGet(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]
 		if !ok {
@@ -43,18 +62,6 @@ func mainPost(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Location", url)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-	}
-}
-
-func main() {
-	urls = make(map[string]string)
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", mainPost)
-	err := http.ListenAndServe(`:8080`, mux)
-	if err != nil {
-		panic(err)
 	}
 }
 

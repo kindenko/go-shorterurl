@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kindenko/go-shorterurl.git/config"
 )
 
 var urls = make(map[string]string)
@@ -17,11 +18,12 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
+
 		r.Post("/", newPost)
 		r.Get("/{shortUrl}", newGet)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(config.SetConfig.Host, r))
 
 }
 
@@ -44,7 +46,9 @@ func newPost(w http.ResponseWriter, r *http.Request) {
 
 		id := randstring()
 		urls[id] = string(b)
-		resp := "http://localhost:8080/" + id
+
+		resp := fmt.Sprintf(config.SetConfig.ResultURL+"/%q", id)
+		//resp := "http://localhost:8080/" + id
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 

@@ -58,13 +58,13 @@ func TestMain(t *testing.T) {
 			rp := httptest.NewRequest(tc.method, "https://localhost:8080", strings.NewReader(tc.url))
 			wp := httptest.NewRecorder()
 			newPost(wp, rp)
-			postUrl := wp.Body.String()
+			postURl := wp.Body.String()
 
 			assert.Equal(t, tc.wantPost.code, wp.Code, "Код ответа Post не совпадает с ожидаемым")
 			assert.Equal(t, tc.wantPost.contentType, wp.Header()["Content-Type"][0], "Заголовок Post ответа не совпадает с ожидаемым")
 
 			// Тест Get запроса
-			rg := httptest.NewRequest(http.MethodGet, postUrl, nil)
+			rg := httptest.NewRequest(http.MethodGet, postURl, nil)
 			wg := httptest.NewRecorder()
 
 			newGet(wg, rg)

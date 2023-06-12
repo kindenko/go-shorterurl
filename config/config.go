@@ -17,6 +17,8 @@ func init() {
 	} else {
 		flag.StringVar(&SetConfig.Host, "a", "localhost:8080", "It's a Host")
 	}
+	
+	
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
 		SetConfig.ResultURL = baseURL
 	} else {

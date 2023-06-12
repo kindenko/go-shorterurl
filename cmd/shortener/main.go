@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -21,7 +22,8 @@ func main() {
 		r.Post("/", newPost)
 		r.Get("/{shortUrl}", newGet)
 	})
-
+	flag.Parse()
+	//fmt.Println(config.SetConfig.Host)
 	log.Fatal(http.ListenAndServe(config.SetConfig.Host, r))
 
 }
@@ -45,7 +47,8 @@ func newPost(w http.ResponseWriter, r *http.Request) {
 
 		id := randstring()
 		urls[id] = string(b)
-		resp := fmt.Sprintf(config.SetConfig.ResultURL+"/%q", id)
+		fmt.Println(urls)
+		resp := config.SetConfig.ResultURL + "/" + id
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 

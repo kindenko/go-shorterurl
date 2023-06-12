@@ -23,7 +23,6 @@ func main() {
 		r.Get("/{shortUrl}", newGet)
 	})
 	flag.Parse()
-	//fmt.Println(config.SetConfig.Host)
 	log.Fatal(http.ListenAndServe(config.SetConfig.Host, r))
 
 }

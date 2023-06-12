@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strings"
 )
 
 var SetConfig struct {
@@ -13,15 +14,12 @@ var SetConfig struct {
 func init() {
 
 	if host := os.Getenv("SERVER_ADDRESS"); host != "" {
-		SetConfig.Host = host
-	} else {
-		flag.StringVar(&SetConfig.Host, "a", "localhost:8080", "It's a Host")
+		SetConfig.Host = strings.TrimSpace(host)
 	}
+	flag.StringVar(&SetConfig.Host, "a", "localhost:8080", "It's a Host")
 
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
-		SetConfig.ResultURL = baseURL
-	} else {
-		flag.StringVar(&SetConfig.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
+		SetConfig.ResultURL = strings.TrimSpace(baseURL)
 	}
-
+	flag.StringVar(&SetConfig.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
 }

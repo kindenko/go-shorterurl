@@ -29,24 +29,23 @@ func main() {
 
 func newPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		b, err := io.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Err: %s", err), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
 			return
 		}
-		if string(b) == "" {
+		if string(body) == "" {
 			http.Error(w, "Empty body!", http.StatusBadRequest)
 			return
 		}
-		url := string(b)
+		url := string(body)
 		if url == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		id := randstring()
-		urls[id] = string(b)
-		fmt.Println(urls)
+		urls[id] = string(body)
 		resp := config.SetConfig.ResultURL + "/" + id
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)

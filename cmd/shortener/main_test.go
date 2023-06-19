@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kindenko/go-shorterurl.git/internal/app/handlers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +49,7 @@ func TestPostHandler(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader(tc.url))
 			w := httptest.NewRecorder()
 
-			postHandler(w, r)
+			handlers.PostHandler(w, r)
 			res := w.Result()
 
 			defer res.Body.Close()
@@ -115,7 +116,7 @@ func TestGetHandler(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
 			w := httptest.NewRecorder()
 
-			getHandler(w, r)
+			handlers.GetHandler(w, r)
 			res := w.Result()
 			defer res.Body.Close()
 			resBody, _ := io.ReadAll(res.Body)

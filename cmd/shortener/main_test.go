@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,71 +10,119 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(t *testing.T) {
+var TestUrls = make(map[string]string)
+
+func TestPostHandler(t *testing.T) {
 
 	type want struct {
 		code        int
 		contentType string
-		method      string
 	}
 
-	testPostRequest := []struct {
+	tests := []struct {
 		name string
 		url  string
-		Post want
-		Get  want
+		want want
 	}{
 		{
-			name: "Test request first url",
-			url:  "https://practicum.yandex.ru/",
-			Post: want{
-				method:      http.MethodPost,
-				code:        201,
-				contentType: "text/plain",
-			},
-			Get: want{
-				method:      http.MethodGet,
-				code:        307,
+			name: "First Post test",
+			url:  "kfklr.com",
+			want: want{
+				code:        http.StatusCreated,
 				contentType: "text/plain",
 			},
 		},
 
 		{
-			name: "Test request second url",
-			url:  "https://www.youtube.com/",
-			Post: want{
-				method:      http.MethodPost,
-				code:        201,
-				contentType: "text/plain",
-			},
-			Get: want{
-				method:      http.MethodGet,
-				code:        307,
-				contentType: "text/plain",
+			name: "Second Post test",
+			url:  "",
+			want: want{
+				code:        http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
 			},
 		},
 	}
 
-	for _, tc := range testPostRequest {
+	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Тест Post запроса
-			rp := httptest.NewRequest(tc.Post.method, "https://localhost:8080", strings.NewReader(tc.url))
-			wp := httptest.NewRecorder()
-			newPost(wp, rp)
-			postURL := wp.Body.String()
+			r := httptest.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader(tc.url))
+			w := httptest.NewRecorder()
 
-			assert.Equal(t, tc.Post.code, wp.Code, "Код ответа Post не совпадает с ожидаемым")
-			assert.Equal(t, tc.Post.contentType, wp.Header()["Content-Type"][0], "Заголовок Post ответа не совпадает с ожидаемым")
+			postHandler(w, r)
+			res := w.Result()
 
-			// Тест Get запроса
-			rg := httptest.NewRequest(tc.Get.method, postURL, nil)
-			wg := httptest.NewRecorder()
+			defer res.Body.Close()
+			response, _ := io.ReadAll(res.Body)
 
-			newGet(wg, rg)
+			TestUrls[tc.url] = string(response)
 
-			assert.Equal(t, tc.Get.code, wg.Code, "Код ответа Get запроса не совпадает с ожидаемым")
-			assert.Equal(t, tc.url, wg.Header()["Location"][0], "Location в Get запросе не совпадает с ожидаемым ответом")
+			assert.Equal(t, tc.want.code, w.Code, "Код ответа Post не совпадает с ожидаемым")
+			assert.Equal(t, tc.want.contentType, w.Header()["Content-Type"][0], "Заголовок Post ответа не совпадает с ожидаемым")
+		})
+	}
+}
 
+func TestGetHandler(t *testing.T) {
+
+	type want struct {
+		code        int
+		contentType string
+		location    string
+		body        string
+	}
+
+	tests := []struct {
+		name string
+		url  string
+		want want
+	}{
+		{
+			name: "First Get Test",
+			url:  "http://localhost:8080/XVlBzgba",
+			want: want{
+				code:        http.StatusTemporaryRedirect,
+				contentType: "text/plain",
+				location:    "kfklr.com",
+				body:        "",
+			},
+		},
+
+		{
+			name: "Second Get test",
+			url:  "http://localhost:8080/",
+			want: want{
+				code:        http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				location:    "",
+				body:        "Bad URL\n",
+			},
+		},
+
+		{
+			name: "Third Get test",
+			url:  "http://localhost:8080/utuyutusd",
+			want: want{
+				code:        http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				location:    "",
+				body:        "Bad URL\n",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
+			w := httptest.NewRecorder()
+
+			getHandler(w, r)
+			res := w.Result()
+			defer res.Body.Close()
+			resBody, _ := io.ReadAll(res.Body)
+
+			assert.Equal(t, tc.want.code, w.Code, "Код ответа Get запроса не совпадает с ожидаемым")
+			assert.Equal(t, tc.want.body, string(resBody), "Тело в Get запросе не совпадает с ожидаемым ответом")
+			assert.Equal(t, tc.want.location, w.Header().Get("Location"), "Тело в Get запросе не совпадает с ожидаемым ответом")
 		})
 	}
 }

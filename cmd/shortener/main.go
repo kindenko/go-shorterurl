@@ -15,19 +15,17 @@ import (
 var urls = make(map[string]string)
 
 func main() {
-	urls = make(map[string]string)
-
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", newPost)
-		r.Get("/{shortUrl}", newGet)
+		r.Post("/", postHandler)
+		r.Get("/{shortUrl}", getHandler)
 	})
 	flag.Parse()
-	log.Fatal(http.ListenAndServe(config.SetConfig.Host, r))
+	log.Fatal(http.ListenAndServe(config.Config.Host, r))
 
 }
 
-func newPost(w http.ResponseWriter, r *http.Request) {
+func postHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -38,15 +36,9 @@ func newPost(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Empty body!", http.StatusBadRequest)
 			return
 		}
-		url := string(body)
-		if url == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		id := randstring()
+		id := randString()
 		urls[id] = string(body)
-		resp := config.SetConfig.ResultURL + "/" + id
+		resp := config.Config.ResultURL + "/" + id
 		w.Header().Set("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 
@@ -54,7 +46,7 @@ func newPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func newGet(w http.ResponseWriter, r *http.Request) {
+func getHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]
@@ -64,10 +56,12 @@ func newGet(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Location", url)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+	} else {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func randstring() string {
+func randString() string {
 	letterBytes := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, 8)
 	for i := range b {

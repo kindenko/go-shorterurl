@@ -1,4 +1,4 @@
-module github.com/kindenko/go-shorterurl.git
+module github.com/kindenko/go-shorterurl
 
 go 1.19
 

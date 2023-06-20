@@ -1,13 +1,15 @@
-package main
+package handlers
 
 import (
+	"flag"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/kindenko/go-shorterurl.git/internal/app/handlers"
+	"github.com/kindenko/go-shorterurl/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,12 +46,16 @@ func TestPostHandler(t *testing.T) {
 		},
 	}
 
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	conf := config.NewCfg()
+	app := NewHandlers(conf)
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader(tc.url))
 			w := httptest.NewRecorder()
 
-			handlers.PostHandler(w, r)
+			app.PostHandler(w, r)
 			res := w.Result()
 
 			defer res.Body.Close()
@@ -110,14 +116,18 @@ func TestGetHandler(t *testing.T) {
 			},
 		},
 	}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	conf := config.NewCfg()
+	app := NewHandlers(conf)
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
 			w := httptest.NewRecorder()
 
-			handlers.GetHandler(w, r)
+			app.GetHandler(w, r)
 			res := w.Result()
+
 			defer res.Body.Close()
 			resBody, _ := io.ReadAll(res.Body)
 

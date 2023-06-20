@@ -5,34 +5,31 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/kindenko/go-shorterurl.git/config"
-	"github.com/kindenko/go-shorterurl.git/internal/app/storage"
+	"github.com/kindenko/go-shorterurl/internal/app/storage"
 )
 
 var urls = make(map[string]string)
 
-func PostHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
-			return
-		}
-		if string(body) == "" {
-			http.Error(w, "Empty body!", http.StatusBadRequest)
-			return
-		}
-		id := storage.RandString()
-		urls[id] = string(body)
-		resp := config.Config.ResultURL + "/" + id
-		w.Header().Set("content-type", "text/plain")
-		w.WriteHeader(http.StatusCreated)
-
-		w.Write([]byte(resp))
+func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
+		return
 	}
+	if string(body) == "" {
+		http.Error(w, "Empty body!", http.StatusBadRequest)
+		return
+	}
+	id := storage.RandString()
+	urls[id] = string(body)
+	resp := a.cfg.ResultURL + "/" + id
+	w.Header().Set("content-type", "text/plain")
+	w.WriteHeader(http.StatusCreated)
+
+	w.Write([]byte(resp))
 }
 
-func GetHandler(w http.ResponseWriter, r *http.Request) {
+func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]

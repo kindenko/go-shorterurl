@@ -13,16 +13,17 @@ type AppConfig struct {
 
 func NewCfg() *AppConfig {
 
-	a := &AppConfig{}
+	cfq := &AppConfig{}
 
-	flag.StringVar(&a.Host, "a", "localhost:8080", "It's a Host")
-	flag.StringVar(&a.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
+	flag.StringVar(&cfq.Host, "a", "localhost:8080", "It's a Host")
+	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
 
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
-		a.ResultURL = strings.TrimSpace(baseURL)
+		cfq.ResultURL = strings.TrimSpace(baseURL)
 	}
 	if host := os.Getenv("SERVER_ADDRESS"); host != "" {
-		a.Host = strings.TrimSpace(host)
+		cfq.Host = strings.TrimSpace(host)
 	}
-	return a
+
+	return cfq
 }

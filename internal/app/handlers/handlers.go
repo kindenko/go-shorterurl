@@ -10,11 +10,11 @@ import (
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
 )
 
-type RequestJson struct {
-	Url string `json:"url"`
+type RequestJSON struct {
+	URL string `json:"url"`
 }
 
-type ResponseJson struct {
+type ResponseJSON struct {
 	Result string `json:"result"`
 }
 
@@ -56,7 +56,7 @@ func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		var req RequestJson
+		var req RequestJSON
 		var buf bytes.Buffer
 
 		_, err := buf.ReadFrom(r.Body)
@@ -71,9 +71,9 @@ func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		id := storage.RandString()
-		urls[id] = string(req.Url)
+		urls[id] = string(req.URL)
 
-		result := ResponseJson{Result: a.cfg.ResultURL + "/" + id}
+		result := ResponseJSON{Result: a.cfg.ResultURL + "/" + id}
 
 		resp, err := json.Marshal(result)
 		if err != nil {

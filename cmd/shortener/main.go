@@ -21,6 +21,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", logger.WithLogging(newHandlers.PostHandler))
+		r.Post("/api/shorten", logger.WithLogging(newHandlers.PostJsonHandler))
 		r.Get("/{shortUrl}", logger.WithLogging(newHandlers.GetHandler))
 	})
 	flag.Parse()

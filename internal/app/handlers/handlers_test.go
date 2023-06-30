@@ -111,7 +111,7 @@ func TestPostJsonHandler(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader(tc.url))
 			w := httptest.NewRecorder()
 
-			app.PostJsonHandler(w, r)
+			app.PostJSONHandler(w, r)
 			res := w.Result()
 
 			defer res.Body.Close()

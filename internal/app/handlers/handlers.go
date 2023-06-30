@@ -54,7 +54,7 @@ func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *Handlers) PostJsonHandler(w http.ResponseWriter, r *http.Request) {
+func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var req RequestJson
 		var buf bytes.Buffer
@@ -81,7 +81,7 @@ func (a *Handlers) PostJsonHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 
 		w.Write(resp)
 	}

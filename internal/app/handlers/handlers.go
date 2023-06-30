@@ -34,7 +34,7 @@ func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	urls[id] = string(body)
 	resp := a.cfg.ResultURL + "/" + id
 	w.Header().Set("content-type", "text/plain")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 
 	w.Write([]byte(resp))
 }

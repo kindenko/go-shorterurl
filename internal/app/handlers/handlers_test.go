@@ -31,7 +31,7 @@ func TestPostHandler(t *testing.T) {
 			name: "First Post test",
 			url:  "kfklr.com",
 			want: want{
-				code:        http.StatusCreated,
+				code:        http.StatusOK,
 				contentType: "text/plain",
 			},
 		},

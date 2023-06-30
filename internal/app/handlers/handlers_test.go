@@ -87,7 +87,7 @@ func TestPostJsonHandler(t *testing.T) {
 				    "url": "https://practicum.yandex.ru"
 			        } `,
 			want: want{
-				code:        http.StatusOK,
+				code:        http.StatusCreated,
 				contentType: "application/json",
 			},
 		},

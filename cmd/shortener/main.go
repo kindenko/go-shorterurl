@@ -10,6 +10,7 @@ import (
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/handlers"
 	"github.com/kindenko/go-shorterurl/internal/app/logger"
+	"github.com/kindenko/go-shorterurl/internal/app/zip"
 )
 
 var urls = make(map[string]string)
@@ -20,9 +21,9 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", logger.WithLogging(newHandlers.PostHandler))
-		r.Post("/api/shorten", logger.WithLogging(newHandlers.PostJSONHandler))
-		r.Get("/{shortUrl}", logger.WithLogging(newHandlers.GetHandler))
+		r.Post("/", logger.WithLogging(zip.GzipMiddleware(newHandlers.PostHandler)))
+		r.Post("/api/shorten", logger.WithLogging(zip.GzipMiddleware(newHandlers.PostJSONHandler)))
+		r.Get("/{shortUrl}", logger.WithLogging(zip.GzipMiddleware(newHandlers.GetHandler)))
 	})
 	flag.Parse()
 	log.Fatal(http.ListenAndServe(conf.Host, r))

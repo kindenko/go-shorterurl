@@ -41,6 +41,7 @@ func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	fileStorage.Short = id
 	fileStorage.Original = url
 
+	fmt.Println(a.cfg.FilePATH)
 	err = storage.SaveToFile(fileStorage, a.cfg.FilePATH)
 
 	if err != nil {

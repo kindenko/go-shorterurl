@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"flag"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -46,8 +44,12 @@ func TestPostHandler(t *testing.T) {
 		},
 	}
 
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	conf := config.NewCfg()
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
 	app := NewHandlers(conf)
 
 	for _, tc := range tests {
@@ -102,8 +104,12 @@ func TestPostJsonHandler(t *testing.T) {
 		},
 	}
 
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	conf := config.NewCfg()
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
 	app := NewHandlers(conf)
 
 	for _, tc := range tests {
@@ -172,8 +178,13 @@ func TestGetHandler(t *testing.T) {
 			},
 		},
 	}
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	conf := config.NewCfg()
+
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
 	app := NewHandlers(conf)
 
 	for _, tc := range tests {

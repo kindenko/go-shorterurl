@@ -20,6 +20,8 @@ func NewCfg() *AppConfig {
 	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
 	flag.StringVar(&cfq.FilePATH, "f", "/tmp/short-url-db.json", "It's a FilePATH")
 
+	flag.Parse()
+
 	if baseURL := os.Getenv("BASE_URL"); baseURL != "" {
 		cfq.ResultURL = strings.TrimSpace(baseURL)
 	}
@@ -27,7 +29,7 @@ func NewCfg() *AppConfig {
 		cfq.Host = strings.TrimSpace(host)
 	}
 	if filepath := os.Getenv("FILE_STORAGE_PATH"); filepath != "" {
-		cfq.Host = strings.TrimSpace(filepath)
+		cfq.FilePATH = strings.TrimSpace(filepath)
 	}
 
 	return cfq

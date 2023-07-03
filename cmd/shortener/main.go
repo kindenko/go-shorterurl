@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	_ "flag"
 	"log"
 	"net/http"
 
@@ -28,7 +28,7 @@ func main() {
 		r.Post("/api/shorten", logger.WithLogging(zip.GzipMiddleware(newHandlers.PostJSONHandler)))
 		r.Get("/{shortUrl}", logger.WithLogging(zip.GzipMiddleware(newHandlers.GetHandler)))
 	})
-	flag.Parse()
+
 	log.Fatal(http.ListenAndServe(conf.Host, r))
 
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
@@ -30,9 +31,24 @@ func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Empty body!", http.StatusBadRequest)
 		return
 	}
+	url := string(body)
 	id := storage.RandString()
 	urls[id] = string(body)
 	resp := a.cfg.ResultURL + "/" + id
+
+	fileStorage := storage.NewFileStorage()
+
+	fileStorage.Short = id
+	fileStorage.Original = url
+
+	err = storage.SaveToFile(fileStorage, a.cfg.FilePATH)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 
@@ -70,6 +86,7 @@ func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		url := string(req.URL)
 		id := storage.RandString()
 		urls[id] = string(req.URL)
 
@@ -78,6 +95,19 @@ func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		resp, err := json.Marshal(result)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		fileStorage := storage.NewFileStorage()
+
+		fileStorage.Short = id
+		fileStorage.Original = url
+
+		err = storage.SaveToFile(fileStorage, a.cfg.FilePATH)
+
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")

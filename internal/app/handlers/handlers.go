@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
@@ -47,19 +46,13 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	saveInFile(id, url, h.cfg.FilePATH)
 
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 
 	w.Write([]byte(resp))
 }
 
-func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]
@@ -102,12 +95,6 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		saveInFile(id, url, h.cfg.FilePATH)
-
-		if err != nil {
-			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

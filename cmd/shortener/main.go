@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "flag"
 	"log"
 	"net/http"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/handlers"
 	"github.com/kindenko/go-shorterurl/internal/app/logger"
-	_ "github.com/kindenko/go-shorterurl/internal/app/storage"
 	"github.com/kindenko/go-shorterurl/internal/app/zip"
 )
 
@@ -21,12 +19,14 @@ func main() {
 	newHandlers := handlers.NewHandlers(conf)
 
 	r := chi.NewRouter()
+	r.Use(logger.WithLogging)
+	r.Use(zip.GzipMiddleware)
 
-	// подправить midleware
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", logger.WithLogging(zip.GzipMiddleware(newHandlers.PostHandler)))
-		r.Post("/api/shorten", logger.WithLogging(zip.GzipMiddleware(newHandlers.PostJSONHandler)))
-		r.Get("/{shortUrl}", logger.WithLogging(zip.GzipMiddleware(newHandlers.GetHandler)))
+		r.Post("/", newHandlers.PostHandler)
+		r.Post("/api/shorten", newHandlers.PostJSONHandler)
+		r.Get("/{shortUrl}", newHandlers.GetHandler)
+
 	})
 
 	log.Fatal(http.ListenAndServe(conf.Host, r))

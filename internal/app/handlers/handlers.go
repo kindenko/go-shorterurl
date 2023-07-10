@@ -21,7 +21,16 @@ type ResponseJSON struct {
 
 var urls = make(map[string]string)
 
-func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
+func saveInFile(id string, url string, path string) {
+	fileStorage := storage.NewFileStorage()
+
+	fileStorage.Short = id
+	fileStorage.Original = url
+
+	storage.SaveToFile(fileStorage, path)
+}
+
+func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
@@ -34,15 +43,9 @@ func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	url := string(body)
 	id := storage.RandString()
 	urls[id] = string(body)
-	resp := a.cfg.ResultURL + "/" + id
+	resp := h.cfg.ResultURL + "/" + id
 
-	fileStorage := storage.NewFileStorage()
-
-	fileStorage.Short = id
-	fileStorage.Original = url
-
-	fmt.Println(a.cfg.FilePATH)
-	err = storage.SaveToFile(fileStorage, a.cfg.FilePATH)
+	saveInFile(id, url, h.cfg.FilePATH)
 
 	if err != nil {
 		log.Println(err)
@@ -71,7 +74,7 @@ func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var req RequestJSON
 		var buf bytes.Buffer
@@ -91,19 +94,14 @@ func (a *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		id := storage.RandString()
 		urls[id] = string(req.URL)
 
-		result := ResponseJSON{Result: a.cfg.ResultURL + "/" + id}
+		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + id}
 
 		resp, err := json.Marshal(result)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 
-		fileStorage := storage.NewFileStorage()
-
-		fileStorage.Short = id
-		fileStorage.Original = url
-
-		err = storage.SaveToFile(fileStorage, a.cfg.FilePATH)
+		saveInFile(id, url, h.cfg.FilePATH)
 
 		if err != nil {
 			log.Println(err)

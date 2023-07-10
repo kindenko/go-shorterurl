@@ -16,9 +16,9 @@ func NewCfg() *AppConfig {
 
 	cfq := &AppConfig{}
 
-	flag.StringVar(&cfq.Host, "a", "localhost:8080", "It's a Host")
-	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "It's a Result URL")
-	flag.StringVar(&cfq.FilePATH, "f", "/tmp/short-url-db.json", "It's a FilePATH")
+	flag.StringVar(&cfq.Host, "a", "localhost:8080", "Host")
+	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "Result URL")
+	flag.StringVar(&cfq.FilePATH, "f", "/tmp/short-url-db.json", "FilePATH")
 
 	flag.Parse()
 

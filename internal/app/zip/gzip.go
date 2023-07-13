@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
-	"strings"
 )
 
 type gzipWriter struct {
@@ -23,21 +22,13 @@ func (c *gzipWriter) Header() http.Header {
 	return c.w.Header()
 }
 
-func (c *gzipWriter) WriteHeader(statusCode int) {
-	if statusCode < 300 {
-		contentType := c.Header().Get("Content-Type")
-		if headerCheck(contentType, "application/json") || headerCheck(contentType, "text/html") {
-			c.w.Header().Set("Content-Encoding", "gzip")
-		}
-	}
-	c.w.WriteHeader(statusCode)
+func (c *gzipWriter) Write(p []byte) (int, error) {
+	return c.zw.Write(p)
 }
 
-func (c *gzipWriter) Write(p []byte) (int, error) {
-	if headerCheck(c.Header().Get("Content-Encoding"), "gzip") {
-		return c.zw.Write(p)
-	}
-	return c.w.Write(p)
+func (c *gzipWriter) WriteHeader(statusCode int) {
+	c.w.Header().Set("Content-Encoding", "gzip")
+	c.w.WriteHeader(statusCode)
 }
 
 func (c *gzipWriter) Close() error {
@@ -72,37 +63,31 @@ func (c *gzipReader) Close() error {
 	return c.zr.Close()
 }
 
-func GzipMiddleware(h http.Handler) http.Handler {
-	compFn := func(w http.ResponseWriter, r *http.Request) {
-		if headerCheck(r.Header.Get("Content-Encoding"), "gzip") {
-			cr, err := newGzipReader(r.Body)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+func GzipMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, req *http.Request) {
+			oldw := w
+
+			switch req.Header.Get("Accept-Encoding") {
+			case "gzip":
+				gw := newGzipWriter(w)
+				oldw = gw
+
+				defer gw.Close()
 			}
-			r.Body = cr
-			defer cr.Close()
-		}
-		ow := w
-		if headerCheck(r.Header.Get("Accept-Encoding"), "gzip") {
-			cw := newGzipWriter(w)
-			ow = cw
-			defer cw.Close()
-		}
 
-		h.ServeHTTP(ow, r)
+			switch req.Header.Get("Content-Encoding") {
+			case "gzip":
+				gw, err := newGzipReader(req.Body)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				req.Body = gw
+				defer gw.Close()
+			}
 
-	}
-	return http.HandlerFunc(compFn)
-}
-
-func headerCheck(str, par string) bool {
-	options := strings.Split(str, ",")
-	for _, option := range options {
-		option = strings.TrimSpace(option)
-		if option == par {
-			return true
-		}
-	}
-	return false
+			next.ServeHTTP(oldw, req)
+		},
+	)
 }

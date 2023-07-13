@@ -96,8 +96,8 @@ func GzipMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(compFn)
 }
 
-func headerCheck(head, par string) bool {
-	options := strings.Split(head, ",")
+func headerCheck(str, par string) bool {
+	options := strings.Split(str, ",")
 	for _, option := range options {
 		option = strings.TrimSpace(option)
 		if option == par {

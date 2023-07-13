@@ -8,52 +8,101 @@ import (
 )
 
 type gzipWriter struct {
-	http.ResponseWriter
-	Writer io.Writer
+	w  http.ResponseWriter
+	zw *gzip.Writer
 }
 
-func (w gzipWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
-}
-
-func GzipHandler(next http.Handler) http.Handler {
-	gzipFn := func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		contentType := r.Header.Get("Content-Type")
-		if !strings.Contains(contentType, "application/json") && !strings.Contains(contentType, "text/html") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil {
-			io.WriteString(w, err.Error())
-			return
-		}
-		defer gz.Close()
-
-		w.Header().Set("Content-Encoding", "gzip")
-		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+func newGzipWriter(w http.ResponseWriter) *gzipWriter {
+	return &gzipWriter{
+		w:  w,
+		zw: gzip.NewWriter(w),
 	}
-	return http.HandlerFunc(gzipFn)
 }
 
-func UnzipRequest(next http.Handler) http.Handler {
-	gzipFn := func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
-			reader, err := gzip.NewReader(r.Body)
+func (c *gzipWriter) Header() http.Header {
+	return c.w.Header()
+}
+
+func (c *gzipWriter) WriteHeader(statusCode int) {
+	if statusCode < 300 {
+		contentType := c.Header().Get("Content-Type")
+		if headerCheck(contentType, "application/json") || headerCheck(contentType, "text/html") {
+			c.w.Header().Set("Content-Encoding", "gzip")
+		}
+	}
+	c.w.WriteHeader(statusCode)
+}
+
+func (c *gzipWriter) Write(p []byte) (int, error) {
+	if headerCheck(c.Header().Get("Content-Encoding"), "gzip") {
+		return c.zw.Write(p)
+	}
+	return c.w.Write(p)
+}
+
+func (c *gzipWriter) Close() error {
+	return c.zw.Close()
+}
+
+type gzipReader struct {
+	r  io.ReadCloser
+	zr *gzip.Reader
+}
+
+func newGzipReader(r io.ReadCloser) (*gzipReader, error) {
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gzipReader{
+		r:  r,
+		zr: zr,
+	}, nil
+}
+
+func (c gzipReader) Read(p []byte) (n int, err error) {
+	return c.zr.Read(p)
+}
+
+func (c *gzipReader) Close() error {
+	if err := c.r.Close(); err != nil {
+		return err
+	}
+	return c.zr.Close()
+}
+
+func GzipMiddleware(h http.Handler) http.Handler {
+	compFn := func(w http.ResponseWriter, r *http.Request) {
+		if headerCheck(r.Header.Get("Content-Encoding"), "gzip") {
+			cr, err := newGzipReader(r.Body)
 			if err != nil {
-				http.Error(w, "Failed to decompress request body", http.StatusInternalServerError)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			defer reader.Close()
-
-			r.Body = http.MaxBytesReader(w, reader, r.ContentLength)
+			r.Body = cr
+			defer cr.Close()
+		}
+		ow := w
+		if headerCheck(r.Header.Get("Accept-Encoding"), "gzip") {
+			cw := newGzipWriter(w)
+			ow = cw
+			defer cw.Close()
 		}
 
-		next.ServeHTTP(w, r)
+		h.ServeHTTP(ow, r)
+
 	}
-	return http.HandlerFunc(gzipFn)
+	return http.HandlerFunc(compFn)
+}
+
+func headerCheck(head, par string) bool {
+	options := strings.Split(head, ",")
+	for _, option := range options {
+		option = strings.TrimSpace(option)
+		if option == par {
+			return true
+		}
+	}
+	return false
 }

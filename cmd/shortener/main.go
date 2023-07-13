@@ -20,8 +20,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(logger.WithLogging)
-	r.Use(zip.UnzipRequest)
-	r.Use(zip.GzipHandler)
+	r.Use(zip.GzipMiddleware)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", newHandlers.PostHandler)

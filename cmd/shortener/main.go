@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/handlers"
@@ -20,7 +21,11 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(logger.WithLogging)
-	r.Use(zip.GzipMiddleware)
+	r.Use(zip.MiddlewareCompressGzip)
+	r.Use(middleware.Compress(5, "text/html",
+		"application/x-gzip",
+		"text/plain",
+		"application/json"))
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", newHandlers.PostHandler)

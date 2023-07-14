@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"flag"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -46,8 +44,12 @@ func TestPostHandler(t *testing.T) {
 		},
 	}
 
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	conf := config.NewCfg()
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
 	app := NewHandlers(conf)
 
 	for _, tc := range tests {
@@ -56,6 +58,66 @@ func TestPostHandler(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			app.PostHandler(w, r)
+			res := w.Result()
+
+			defer res.Body.Close()
+			response, _ := io.ReadAll(res.Body)
+
+			TestUrls[tc.url] = string(response)
+
+			assert.Equal(t, tc.want.code, w.Code, "Код ответа Post не совпадает с ожидаемым")
+			assert.Equal(t, tc.want.contentType, w.Header()["Content-Type"][0], "Заголовок Post ответа не совпадает с ожидаемым")
+		})
+	}
+}
+
+func TestPostJsonHandler(t *testing.T) {
+
+	type want struct {
+		code        int
+		contentType string
+	}
+
+	tests := []struct {
+		name string
+		url  string
+		want want
+	}{
+		{
+			name: "First Post test",
+			url: `{
+				    "url": "https://practicum.yandex.ru"
+			        } `,
+			want: want{
+				code:        http.StatusCreated,
+				contentType: "application/json",
+			},
+		},
+
+		{
+			name: "Second Post test",
+			url:  "",
+			want: want{
+				code:        http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+	}
+
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
+	app := NewHandlers(conf)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader(tc.url))
+			w := httptest.NewRecorder()
+
+			app.PostJSONHandler(w, r)
 			res := w.Result()
 
 			defer res.Body.Close()
@@ -116,8 +178,13 @@ func TestGetHandler(t *testing.T) {
 			},
 		},
 	}
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	conf := config.NewCfg()
+
+	conf := &config.AppConfig{
+		Host:      "localhost:8080",
+		ResultURL: "http://localhost:8080",
+		FilePATH:  "/tmp/short-url-db.json",
+	}
+
 	app := NewHandlers(conf)
 
 	for _, tc := range tests {

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,9 +10,26 @@ import (
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
 )
 
+type RequestJSON struct {
+	URL string `json:"url"`
+}
+
+type ResponseJSON struct {
+	Result string `json:"result"`
+}
+
 var urls = make(map[string]string)
 
-func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
+func saveInFile(id string, url string, path string) {
+	fileStorage := storage.NewFileStorage()
+
+	fileStorage.Short = id
+	fileStorage.Original = url
+
+	storage.SaveToFile(fileStorage, path)
+}
+
+func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
@@ -20,16 +39,20 @@ func (a *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Empty body!", http.StatusBadRequest)
 		return
 	}
+	url := string(body)
 	id := storage.RandString()
 	urls[id] = string(body)
-	resp := a.cfg.ResultURL + "/" + id
+	resp := h.cfg.ResultURL + "/" + id
+
+	saveInFile(id, url, h.cfg.FilePATH)
+
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 
 	w.Write([]byte(resp))
 }
 
-func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, ok := urls[id]
@@ -41,5 +64,41 @@ func (a *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	} else {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var req RequestJSON
+		var buf bytes.Buffer
+
+		_, err := buf.ReadFrom(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err = json.Unmarshal(buf.Bytes(), &req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		url := string(req.URL)
+		id := storage.RandString()
+		urls[id] = string(req.URL)
+
+		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + id}
+
+		resp, err := json.Marshal(result)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		saveInFile(id, url, h.cfg.FilePATH)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+
+		w.Write(resp)
 	}
 }

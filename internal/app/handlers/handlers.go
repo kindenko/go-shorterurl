@@ -2,11 +2,16 @@ package handlers
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
 )
 
@@ -30,6 +35,7 @@ func saveInFile(id string, url string, path string) {
 }
 
 func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
@@ -101,4 +107,25 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(resp)
 	}
+}
+
+func (h *Handlers) PingDataBase(w http.ResponseWriter, _ *http.Request) {
+	fmt.Println(h.cfg.DataBaseString)
+
+	db, err := sql.Open("pgx", h.cfg.DataBaseString)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err = db.PingContext(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return
 }

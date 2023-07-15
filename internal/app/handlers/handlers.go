@@ -127,5 +127,4 @@ func (h *Handlers) PingDataBase(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return
 }

@@ -18,16 +18,16 @@ type File struct {
 	path string
 }
 
-func InitFileDb(fileStoragePath string) *File {
+func InitFileDB(fileStoragePath string) *File {
 	return &File{
 		path: fileStoragePath,
 	}
 }
 
-func (f *File) Save(fullUrl string) (string, error) {
+func (f *File) Save(fullURL string) (string, error) {
 	var fs FileStorage
 
-	fs.Original = fullUrl
+	fs.Original = fullURL
 	fs.Short = utils.RandString()
 
 	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)

@@ -14,9 +14,9 @@ func InitMemory() *MemoryStorage {
 	}
 }
 
-func (m *MemoryStorage) Save(fullUrl string) (string, error) {
+func (m *MemoryStorage) Save(fullURL string) (string, error) {
 	shortURL := utils.RandString()
-	m.store[shortURL] = fullUrl
+	m.store[shortURL] = fullURL
 
 	return shortURL, nil
 }

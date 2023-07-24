@@ -13,16 +13,16 @@ type PostgresDB struct {
 	db *sql.DB
 }
 
-func (p PostgresDB) Save(fullUrl string) (string, error) {
+func (p PostgresDB) Save(fullURL string) (string, error) {
 
-	shortUrl := utils.RandString()
+	shortURL := utils.RandString()
 	query := "insert into shorterurl(short, long) values ($1, $2)"
-	_, err := p.db.Exec(query, shortUrl, fullUrl)
+	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {
 		log.Println("Failed to save short link into DB")
 		return "", nil
 	}
-	return shortUrl, nil
+	return shortURL, nil
 }
 
 func (p PostgresDB) Get(shortURL string) (string, error) {
@@ -36,7 +36,7 @@ func (p PostgresDB) Get(shortURL string) (string, error) {
 	return long, nil
 }
 
-func InitDb(path string, baseurl string) *PostgresDB {
+func InitDB(path string, baseurl string) *PostgresDB {
 	if path == "" {
 		return nil
 	}

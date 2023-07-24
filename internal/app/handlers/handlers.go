@@ -51,13 +51,13 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	//id := utils.RandString()
 	//urls[id] = string(body)
 	//saveInFile(id, url, h.cfg.FilePATH)
-	shortUrl, err := h.storage.Save(url)
+	shortURL, err := h.storage.Save(url)
 	if err != nil {
 		fmt.Println(err)
 	}
 	//urls[shortUrl] = string(body)
 
-	resp := h.cfg.ResultURL + "/" + shortUrl
+	resp := h.cfg.ResultURL + "/" + shortURL
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 

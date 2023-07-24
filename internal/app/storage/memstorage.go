@@ -15,10 +15,10 @@ func InitMemory() *MemoryStorage {
 }
 
 func (m *MemoryStorage) Save(fullUrl string) (string, error) {
-	shortUrl := utils.RandString()
-	m.store[shortUrl] = fullUrl
+	shortURL := utils.RandString()
+	m.store[shortURL] = fullUrl
 
-	return shortUrl, nil
+	return shortURL, nil
 }
 
 func (m *MemoryStorage) Get(shortURL string) (string, error) {

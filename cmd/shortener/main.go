@@ -17,6 +17,7 @@ var urls = make(map[string]string)
 
 func main() {
 	conf := config.NewCfg()
+
 	newHandlers := handlers.NewHandlers(conf)
 
 	r := chi.NewRouter()

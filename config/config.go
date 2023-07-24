@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -10,7 +9,7 @@ import (
 const (
 	DBhost     = "localhost"
 	DBuser     = "postgres"
-	DBpassword = "ilovecar123"
+	DBpassword = ""
 	DBdbname   = "postgres"
 )
 
@@ -21,16 +20,17 @@ type AppConfig struct {
 	DataBaseString string `env:"DATABASE_DSN"`
 }
 
+var cfg AppConfig
+
 func NewCfg() *AppConfig {
 
 	cfq := &AppConfig{}
-	ps := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
-		DBhost, DBuser, DBpassword, DBdbname)
+	//ps := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", DBhost, DBuser, DBpassword, DBdbname)
 
 	flag.StringVar(&cfq.Host, "a", "localhost:8080", "Host")
 	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "Result URL")
 	flag.StringVar(&cfq.FilePATH, "f", "/tmp/short-url-db.json", "FilePATH")
-	flag.StringVar(&cfq.DataBaseString, "d", ps, "Connect to DB")
+	flag.StringVar(&cfq.DataBaseString, "d", "", "Connect to DB")
 
 	flag.Parse()
 

@@ -5,11 +5,67 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
+	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
 type FileStorage struct {
 	Short    string `json:"short_url"`
 	Original string `json:"original_url"`
+}
+
+type File struct {
+	path string
+}
+
+func InitFileDb(fileStoragePath string) *File {
+	return &File{
+		path: fileStoragePath,
+	}
+}
+
+func (f *File) Save(fullUrl string) (string, error) {
+	var fs FileStorage
+
+	fs.Original = fullUrl
+	fs.Short = utils.RandString()
+
+	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(fs)
+	return fs.Short, err
+}
+
+func (f *File) Get(shortURL string) (string, error) {
+
+	file, err := os.OpenFile(f.path, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	data := make(map[string]string)
+
+	for scanner.Scan() {
+		var d FileStorage
+		err = json.Unmarshal(scanner.Bytes(), &d)
+		if err != nil {
+			log.Println(err)
+		}
+
+		data[d.Short] = d.Original
+	}
+	original := data[shortURL]
+
+	return original, nil
+
 }
 
 func NewFileStorage() *FileStorage {

@@ -33,7 +33,6 @@ func Init(cfg *config.AppConfig) MyStorage {
 			return &s
 		}
 	}
-	fmt.Println("MEM")
 	s.defaultStorage = InitMemory()
 
 	return &s

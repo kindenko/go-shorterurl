@@ -13,7 +13,6 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
-	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
 type RequestJSON struct {
@@ -98,17 +97,22 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		url := string(req.URL)
-		id := utils.RandString()
+		//id := utils.RandString()
+
+		shortURL, err := h.storage.Save(url)
+		if err != nil {
+			fmt.Println(err)
+		}
 		//urls[id] = string(req.URL)
 
-		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + id}
+		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 
 		resp, err := json.Marshal(result)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 
-		saveInFile(id, url, h.cfg.FilePATH)
+		saveInFile(shortURL, url, h.cfg.FilePATH)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

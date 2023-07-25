@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
@@ -28,4 +29,8 @@ func (m *MemoryStorage) Get(shortURL string) (string, error) {
 		return long, nil
 	}
 	return "Missing url", nil
+}
+
+func (m *MemoryStorage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+	panic("Create me")
 }

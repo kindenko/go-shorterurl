@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
@@ -66,6 +67,10 @@ func (f *File) Get(shortURL string) (string, error) {
 
 	return original, nil
 
+}
+
+func (f *File) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+	panic("create me")
 }
 
 func NewFileStorage() *FileStorage {

@@ -33,6 +33,7 @@ func main() {
 		r.Post("/api/shorten", newHandlers.PostJSONHandler)
 		r.Get("/{shortUrl}", newHandlers.GetHandler)
 		r.Get("/ping", newHandlers.PingDataBase)
+		r.Post("/api/shorten/batch", newHandlers.Batch)
 	})
 
 	log.Fatal(http.ListenAndServe(conf.Host, r))

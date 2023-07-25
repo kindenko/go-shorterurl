@@ -2,15 +2,22 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
+	"context"
+	"time"
+
+	"github.com/kindenko/go-shorterurl/config"
+	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgresDB struct {
-	db *sql.DB
+	db  *sql.DB
+	cfg config.AppConfig
 }
 
 func (p PostgresDB) Save(fullURL string) (string, error) {
@@ -34,6 +41,32 @@ func (p PostgresDB) Get(shortURL string) (string, error) {
 		return "Error in Get from db", nil
 	}
 	return long, nil
+}
+
+func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+	var resultEntities []structures.BatchEntity
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	tx, err := p.db.Begin()
+	if err != nil {
+		fmt.Println("Error while begin tx")
+		return resultEntities, err
+	}
+	for _, v := range entities {
+		short := utils.RandString()
+		_, err = tx.ExecContext(ctx, "insert into "+"shorterurl"+"(short, long) values ($1, $2)", short, v.OriginalURL)
+		if err != nil {
+			fmt.Println("Error while ExecContext", err)
+			tx.Rollback()
+			return resultEntities, nil
+		}
+		resultEntities = append(resultEntities, structures.BatchEntity{
+			CorrelationID: v.CorrelationID,
+			ShortURL:      p.cfg.ResultURL + "/" + short,
+		})
+
+	}
+	return resultEntities, tx.Commit()
 }
 
 func InitDB(path string, baseurl string) *PostgresDB {

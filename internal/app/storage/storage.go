@@ -1,15 +1,15 @@
 package storage
 
 import (
-	"fmt"
-
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/database"
+	"github.com/kindenko/go-shorterurl/internal/app/structures"
 )
 
 type MyStorage interface {
 	Save(fullURL string) (string, error)
 	Get(shortURL string) (string, error)
+	Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error)
 }
 
 type storage struct {
@@ -22,13 +22,11 @@ func Init(cfg *config.AppConfig) MyStorage {
 	switch {
 	case cfg.DataBaseString != "":
 		{
-			fmt.Println("db")
 			s.defaultStorage = database.InitDB(cfg.DataBaseString, cfg.ResultURL)
 			return &s
 		}
 	case cfg.FilePATH != "/tmp/short-url-db.json":
 		{
-			fmt.Println("FILE")
 			s.defaultStorage = InitFileDB(cfg.FilePATH)
 			return &s
 		}
@@ -52,4 +50,8 @@ func (s *storage) Get(short string) (string, error) {
 		return "", err
 	}
 	return full, nil
+}
+
+func (s *storage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+	return s.defaultStorage.Batch(entities)
 }

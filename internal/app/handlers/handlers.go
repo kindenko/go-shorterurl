@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/kindenko/go-shorterurl/internal/app/storage"
+	"github.com/kindenko/go-shorterurl/internal/app/structures"
 )
 
 type RequestJSON struct {
@@ -22,8 +23,6 @@ type RequestJSON struct {
 type ResponseJSON struct {
 	Result string `json:"result"`
 }
-
-//var urls = make(map[string]string)
 
 func saveInFile(id string, url string, path string) {
 	fileStorage := storage.NewFileStorage()
@@ -47,14 +46,10 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	url := string(body)
 
-	//id := utils.RandString()
-	//urls[id] = string(body)
-	//saveInFile(id, url, h.cfg.FilePATH)
 	shortURL, err := h.storage.Save(url)
 	if err != nil {
 		fmt.Println(err)
 	}
-	//urls[shortUrl] = string(body)
 
 	resp := h.cfg.ResultURL + "/" + shortURL
 	w.Header().Set("content-type", "text/plain")
@@ -66,7 +61,6 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
-		//url, ok := urls[id]
 		url, err := h.storage.Get(id)
 		if err != nil {
 			http.Error(w, "Bad URL", http.StatusBadRequest)
@@ -97,13 +91,11 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		url := string(req.URL)
-		//id := utils.RandString()
 
 		shortURL, err := h.storage.Save(url)
 		if err != nil {
 			fmt.Println(err)
 		}
-		//urls[id] = string(req.URL)
 
 		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 
@@ -119,6 +111,41 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(resp)
 	}
+}
+
+func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
+	var batches []structures.BatchEntity
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("Batch: failed to read from body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(body, &batches)
+	fmt.Println("Batch request body", batches)
+	if err != nil {
+		fmt.Println("Batch: failed to unmarshal request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	result, err := h.storage.Batch(batches)
+	if err != nil {
+		fmt.Println("Batch: failed to save to database")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	response, err := json.Marshal(result)
+	fmt.Println("Batch response", string(response))
+	if err != nil {
+		fmt.Println("Batch: failed to marshal response")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(response)
+
 }
 
 func (h *Handlers) PingDataBase(w http.ResponseWriter, _ *http.Request) {

@@ -1,15 +1,27 @@
 package utils
 
 import (
-	"math/rand"
+	"fmt"
+
+	"crypto/rand"
+	"math/big"
 )
 
-func RandString() string {
-	letterBytes := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	b := make([]byte, 8)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
+var defaultLength = 8
 
+func RandString() string {
+	var codeAlphabet = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := ""
+	for i := 0; i < defaultLength; i++ {
+		b += string(codeAlphabet[cryptoRandSecure(int64(len(codeAlphabet)))])
+	}
+	return b
+}
+
+func cryptoRandSecure(max int64) int64 {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return nBig.Int64()
 }

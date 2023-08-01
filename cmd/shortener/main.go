@@ -17,6 +17,7 @@ var urls = make(map[string]string)
 
 func main() {
 	conf := config.NewCfg()
+
 	newHandlers := handlers.NewHandlers(conf)
 
 	r := chi.NewRouter()
@@ -31,7 +32,7 @@ func main() {
 		r.Post("/", newHandlers.PostHandler)
 		r.Post("/api/shorten", newHandlers.PostJSONHandler)
 		r.Get("/{shortUrl}", newHandlers.GetHandler)
-
+		r.Get("/ping", newHandlers.PingDataBase)
 	})
 
 	log.Fatal(http.ListenAndServe(conf.Host, r))

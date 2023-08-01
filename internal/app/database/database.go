@@ -22,7 +22,7 @@ type PostgresDB struct {
 
 func (p PostgresDB) Save(fullURL string) (string, error) {
 
-	shortURL := utils.RandString()
+	shortURL := utils.RandString(fullURL)
 	query := "insert into shorterurl(short, long) values ($1, $2)"
 	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {
@@ -53,7 +53,7 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 		return resultEntities, err
 	}
 	for _, v := range entities {
-		short := utils.RandString()
+		short := utils.RandString(v.OriginalURL)
 		_, err = tx.ExecContext(ctx, "insert into "+"shorterurl"+"(short, long) values ($1, $2)", short, v.OriginalURL)
 		if err != nil {
 			fmt.Println("Error while ExecContext", err)

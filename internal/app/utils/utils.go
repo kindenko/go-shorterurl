@@ -1,27 +1,34 @@
 package utils
 
 import (
-	"fmt"
-
-	"crypto/rand"
-	"math/big"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/hex"
+	"net/url"
 )
 
-var defaultLength = 8
-
-func RandString() string {
-	var codeAlphabet = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := ""
-	for i := 0; i < defaultLength; i++ {
-		b += string(codeAlphabet[cryptoRandSecure(int64(len(codeAlphabet)))])
+func RandString(s string) string {
+	hash := GetMD5Hash(s)
+	encoded := base64.StdEncoding.EncodeToString([]byte(hash))
+	if len(encoded) > 6 {
+		return encoded[:7]
+	} else {
+		return encoded
 	}
-	return b
 }
 
-func cryptoRandSecure(max int64) int64 {
-	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
+func GetMD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}
+
+func MakeURL(baseURL, identifier string) (string, error) {
+	parsed, err := url.Parse(baseURL)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
-	return nBig.Int64()
+
+	parsed.Path = identifier
+
+	return parsed.String(), nil
 }

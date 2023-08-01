@@ -29,7 +29,7 @@ func (f *File) Save(fullURL string) (string, error) {
 	var fs FileStorage
 
 	fs.Original = fullURL
-	fs.Short = utils.RandString()
+	fs.Short = utils.RandString(fullURL)
 
 	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {

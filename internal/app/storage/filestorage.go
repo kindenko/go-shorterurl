@@ -70,7 +70,7 @@ func (f *File) Get(shortURL string) (string, error) {
 }
 
 func (f *File) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
-	panic("create me")
+	panic("Missing method")
 }
 
 func NewFileStorage() *FileStorage {

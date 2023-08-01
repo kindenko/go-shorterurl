@@ -12,7 +12,6 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/kindenko/go-shorterurl/internal/app/storage"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 )
 
@@ -22,15 +21,6 @@ type RequestJSON struct {
 
 type ResponseJSON struct {
 	Result string `json:"result"`
-}
-
-func saveInFile(id string, url string, path string) {
-	fileStorage := storage.NewFileStorage()
-
-	fileStorage.Short = id
-	fileStorage.Original = url
-
-	storage.SaveToFile(fileStorage, path)
 }
 
 func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,8 +93,6 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-
-		saveInFile(shortURL, url, h.cfg.FilePATH)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

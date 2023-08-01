@@ -27,7 +27,7 @@ func (p PostgresDB) Save(fullURL string) (string, error) {
 	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {
 		log.Println("Failed to save short link into DB")
-		return "", nil
+		return "", err
 	}
 	return shortURL, nil
 }
@@ -38,7 +38,7 @@ func (p PostgresDB) Get(shortURL string) (string, error) {
 	row := p.db.QueryRow(query, shortURL)
 	if err := row.Scan(&long); err != nil {
 		log.Println("Failed to get link from db")
-		return "Error in Get from db", nil
+		return "Error in Get from db", err
 	}
 	return long, nil
 }

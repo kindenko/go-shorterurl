@@ -12,7 +12,6 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/kindenko/go-shorterurl/internal/app/storage"
 )
 
 type RequestJSON struct {
@@ -21,17 +20,6 @@ type RequestJSON struct {
 
 type ResponseJSON struct {
 	Result string `json:"result"`
-}
-
-//var urls = make(map[string]string)
-
-func saveInFile(id string, url string, path string) {
-	fileStorage := storage.NewFileStorage()
-
-	fileStorage.Short = id
-	fileStorage.Original = url
-
-	storage.SaveToFile(fileStorage, path)
 }
 
 func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,14 +35,10 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	url := string(body)
 
-	//id := utils.RandString()
-	//urls[id] = string(body)
-	//saveInFile(id, url, h.cfg.FilePATH)
 	shortURL, err := h.storage.Save(url)
 	if err != nil {
 		fmt.Println(err)
 	}
-	//urls[shortUrl] = string(body)
 
 	resp := h.cfg.ResultURL + "/" + shortURL
 	w.Header().Set("content-type", "text/plain")
@@ -66,7 +50,6 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
-		//url, ok := urls[id]
 		url, err := h.storage.Get(id)
 		if err != nil {
 			http.Error(w, "Bad URL", http.StatusBadRequest)
@@ -97,13 +80,11 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		url := string(req.URL)
-		//id := utils.RandString()
 
 		shortURL, err := h.storage.Save(url)
 		if err != nil {
 			fmt.Println(err)
 		}
-		//urls[id] = string(req.URL)
 
 		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 
@@ -111,8 +92,6 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
-
-		saveInFile(shortURL, url, h.cfg.FilePATH)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

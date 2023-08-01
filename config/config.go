@@ -25,7 +25,6 @@ var cfg AppConfig
 func NewCfg() *AppConfig {
 
 	cfq := &AppConfig{}
-	//ps := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", DBhost, DBuser, DBpassword, DBdbname)
 
 	flag.StringVar(&cfq.Host, "a", "localhost:8080", "Host")
 	flag.StringVar(&cfq.ResultURL, "b", "http://localhost:8080", "Result URL")

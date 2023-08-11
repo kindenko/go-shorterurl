@@ -56,6 +56,14 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
+	var Host string
+
+	if h.cfg.ResultURL == "" {
+		Host = "http://localhost:8080"
+	} else {
+		Host = r.Host
+	}
+	fmt.Println(Host)
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, err := h.storage.Get(id)

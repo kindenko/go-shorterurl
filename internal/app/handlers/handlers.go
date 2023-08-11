@@ -24,6 +24,7 @@ type ResponseJSON struct {
 }
 
 func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
+	var ResultURL string
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -41,7 +42,13 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	resp := h.cfg.ResultURL + "/" + shortURL
+	if h.cfg.ResultURL == "" {
+		ResultURL = "http://localhost:8080"
+	} else {
+		ResultURL = h.cfg.ResultURL
+	}
+
+	resp := ResultURL + "/" + shortURL
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 
@@ -68,6 +75,7 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var req RequestJSON
 		var buf bytes.Buffer
+		var ResultURL string
 
 		_, err := buf.ReadFrom(r.Body)
 		if err != nil {
@@ -87,7 +95,13 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 
-		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
+		if h.cfg.ResultURL == "" {
+			ResultURL = "http://localhost:8080"
+		} else {
+			ResultURL = h.cfg.ResultURL
+		}
+
+		result := ResponseJSON{Result: ResultURL + "/" + shortURL}
 
 		resp, err := json.Marshal(result)
 		if err != nil {

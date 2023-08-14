@@ -17,7 +17,7 @@ import (
 
 type PostgresDB struct {
 	db  *sql.DB
-	cfg *config.AppConfig
+	cfg config.AppConfig
 }
 
 func (p PostgresDB) Save(fullURL string) (string, error) {
@@ -45,7 +45,7 @@ func (p PostgresDB) Get(shortURL string) (string, error) {
 
 func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
 	var resultEntities []structures.BatchEntity
-	// var ResultURL string
+	var ResultURL string
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -63,16 +63,16 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 			return resultEntities, nil
 		}
 
-		// if p.cfg.ResultURL == "" {
-		// 	fmt.Println(p.cfg.ResultURL)
-		// 	ResultURL = "http://localhost:8080"
-		// } else {
-		// 	ResultURL = p.cfg.ResultURL
-		// }
+		if p.cfg.ResultURL == "" {
+			fmt.Println(p.cfg.ResultURL)
+			ResultURL = "http://localhost:8080"
+		} else {
+			ResultURL = p.cfg.ResultURL
+		}
 
 		resultEntities = append(resultEntities, structures.BatchEntity{
 			CorrelationID: v.CorrelationID,
-			ShortURL:      p.cfg.ResultURL + "/" + short,
+			ShortURL:      ResultURL + "/" + short,
 		})
 
 	}

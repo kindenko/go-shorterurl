@@ -12,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	e "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 )
 
@@ -24,8 +25,6 @@ type ResponseJSON struct {
 }
 
 func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
-	var ResultURL string
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error: %s", err), http.StatusBadRequest)
@@ -36,19 +35,18 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := string(body)
-
 	shortURL, err := h.storage.Save(url)
-	if err != nil {
-		fmt.Println(err)
+	if err == e.ErrUniqueValue {
+		resp := h.cfg.ResultURL + "/" + shortURL
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+
+		w.Write([]byte(resp))
+
+		return
 	}
 
-	if h.cfg.ResultURL == "" {
-		ResultURL = "http://localhost:8080"
-	} else {
-		ResultURL = h.cfg.ResultURL
-	}
-
-	resp := ResultURL + "/" + shortURL
+	resp := h.cfg.ResultURL + "/" + shortURL
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 
@@ -65,7 +63,6 @@ func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Bad URL", http.StatusBadRequest)
 			return
 		}
-
 		w.Header().Set("Location", url)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	} else {
@@ -77,7 +74,6 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var req RequestJSON
 		var buf bytes.Buffer
-		var ResultURL string
 
 		_, err := buf.ReadFrom(r.Body)
 		if err != nil {
@@ -93,17 +89,24 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		url := string(req.URL)
 
 		shortURL, err := h.storage.Save(url)
+		if err == e.ErrUniqueValue {
+			result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
+			resp, err := json.Marshal(result)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+
+			w.Write(resp)
+
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		if h.cfg.ResultURL == "" {
-			ResultURL = "http://localhost:8080"
-		} else {
-			ResultURL = h.cfg.ResultURL
-		}
-
-		result := ResponseJSON{Result: ResultURL + "/" + shortURL}
+		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 
 		resp, err := json.Marshal(result)
 		if err != nil {

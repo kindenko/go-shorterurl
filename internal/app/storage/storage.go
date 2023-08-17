@@ -5,6 +5,7 @@ import (
 
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/database"
+	e "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 )
 
@@ -43,9 +44,14 @@ func Init(cfg *config.AppConfig) MyStorage {
 
 func (s *storage) Save(full string) (string, error) {
 	short, err := s.defaultStorage.Save(full)
-	if err != nil {
+	if err == e.ErrUniqueValue {
+		return short, err
+	}
+
+	if err != nil && err == e.ErrUniqueValue {
 		return "", err
 	}
+
 	return short, nil
 }
 

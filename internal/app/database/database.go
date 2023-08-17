@@ -2,6 +2,8 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+
 	"fmt"
 	"log"
 
@@ -9,8 +11,12 @@ import (
 	"time"
 
 	"github.com/kindenko/go-shorterurl/config"
+	e "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -21,15 +27,35 @@ type PostgresDB struct {
 }
 
 func (p PostgresDB) Save(fullURL string) (string, error) {
+	var short string
 
 	shortURL := utils.RandString(fullURL)
 	query := "insert into shorterurl(short, long) values ($1, $2)"
 	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {
-		log.Println("Failed to save short link into DB")
-		return "", err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			log.Println(err)
+			short, err = p.GetShortURL(fullURL)
+			if err != nil {
+				log.Println("faled search previously saved url")
+				return "", nil
+			}
+			return short, e.ErrUniqueValue
+		}
 	}
 	return shortURL, nil
+}
+
+func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
+	var short string
+	query := "select short from shorterurl where long=$1"
+	row := p.db.QueryRow(query, fullURL)
+	if err := row.Scan(&short); err != nil {
+		return "", err
+	}
+	log.Println("Забрали шорт", short)
+	return short, nil
 }
 
 func (p PostgresDB) Get(shortURL string) (string, error) {
@@ -62,7 +88,7 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 			tx.Rollback()
 			return resultEntities, nil
 		}
-
+		// костылище, не смог исправить
 		if p.cfg.ResultURL == "" {
 			fmt.Println(p.cfg.ResultURL)
 			ResultURL = "http://localhost:8080"
@@ -90,7 +116,7 @@ func InitDB(path string, baseurl string) *PostgresDB {
 		return nil
 	}
 
-	_, err = db.Exec("create table if not exists shorterurl(id serial, short text not null, long text not null)")
+	_, err = db.Exec("create table if not exists shorterurl(id serial not null, short text not null not null, long text not null); create unique index on shorterurl (long)")
 	if err != nil {
 		log.Println(err)
 		return nil

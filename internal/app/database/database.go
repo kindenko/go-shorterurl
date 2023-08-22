@@ -57,7 +57,7 @@ func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
 
 func (p PostgresDB) Get(shortURL string) (string, error) {
 	var long string
-	query := "select long from shorterurl where shortURL=$1"
+	query := "select longURL from shorterurl where shortURL=$1"
 	row := p.db.QueryRow(query, shortURL)
 	if err := row.Scan(&long); err != nil {
 		log.Println("Failed to get link from db")

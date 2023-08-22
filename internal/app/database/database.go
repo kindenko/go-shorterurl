@@ -26,10 +26,9 @@ type PostgresDB struct {
 	cfg config.AppConfig
 }
 
-func (p PostgresDB) Save(fullURL string) (string, error) {
+func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
 	var short string
 
-	shortURL := utils.RandString(fullURL)
 	query := "insert into shorterurl(short, long) values ($1, $2)"
 	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {

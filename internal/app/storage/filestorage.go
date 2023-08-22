@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
-	"github.com/kindenko/go-shorterurl/internal/app/utils"
+	//"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
 type FileStorage struct {
@@ -25,11 +25,11 @@ func InitFileDB(fileStoragePath string) *File {
 	}
 }
 
-func (f *File) Save(fullURL string) (string, error) {
+func (f *File) Save(fullURL string, shortURL string) (string, error) {
 	var fs FileStorage
 
 	fs.Original = fullURL
-	fs.Short = utils.RandString(fullURL)
+	fs.Short = shortURL
 
 	file, err := os.OpenFile(f.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {

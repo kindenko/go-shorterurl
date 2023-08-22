@@ -2,7 +2,6 @@ package storage
 
 import (
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
-	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
 type MemoryStorage struct {
@@ -15,8 +14,7 @@ func InitMemory() *MemoryStorage {
 	}
 }
 
-func (m *MemoryStorage) Save(fullURL string) (string, error) {
-	shortURL := utils.RandString(fullURL)
+func (m *MemoryStorage) Save(fullURL string, shortURL string) (string, error) {
 	m.store[shortURL] = fullURL
 
 	return shortURL, nil

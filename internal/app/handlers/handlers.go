@@ -14,6 +14,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	e "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
+	"github.com/kindenko/go-shorterurl/internal/app/utils"
 )
 
 type RequestJSON struct {
@@ -35,7 +36,9 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := string(body)
-	shortURL, err := h.storage.Save(url)
+	short := utils.RandString(url)
+
+	shortURL, err := h.storage.Save(url, short)
 	if err == e.ErrUniqueValue {
 		resp := h.cfg.ResultURL + "/" + shortURL
 		w.Header().Set("Content-Type", "application/json")
@@ -87,8 +90,9 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		url := string(req.URL)
+		short := utils.RandString(url)
 
-		shortURL, err := h.storage.Save(url)
+		shortURL, err := h.storage.Save(url, short)
 		if err == e.ErrUniqueValue {
 			result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 			resp, err := json.Marshal(result)

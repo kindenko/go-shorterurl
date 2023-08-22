@@ -10,7 +10,7 @@ import (
 )
 
 type MyStorage interface {
-	Save(fullURL string) (string, error)
+	Save(fullURL string, shortURL string) (string, error)
 	Get(shortURL string) (string, error)
 	Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error)
 }
@@ -42,8 +42,8 @@ func Init(cfg *config.AppConfig) MyStorage {
 	return &s
 }
 
-func (s *storage) Save(full string) (string, error) {
-	short, err := s.defaultStorage.Save(full)
+func (s *storage) Save(full string, short string) (string, error) {
+	short, err := s.defaultStorage.Save(full, short)
 	if err == e.ErrUniqueValue {
 		return short, err
 	}

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/kindenko/go-shorterurl/config"
 	"github.com/kindenko/go-shorterurl/internal/app/database"
@@ -25,18 +25,18 @@ func Init(cfg *config.AppConfig) MyStorage {
 	switch {
 	case cfg.DataBaseString != "":
 		{
-			fmt.Println("DB")
+			log.Println("DB")
 			s.defaultStorage = database.InitDB(cfg.DataBaseString, cfg.ResultURL)
 			return &s
 		}
 	case cfg.FilePATH != "/tmp/short-url-db.json":
 		{
-			fmt.Println("FILE")
+			log.Println("FILE")
 			s.defaultStorage = InitFileDB(cfg.FilePATH)
 			return &s
 		}
 	}
-	fmt.Println("MEM")
+	log.Println("MEM")
 	s.defaultStorage = InitMemory()
 
 	return &s

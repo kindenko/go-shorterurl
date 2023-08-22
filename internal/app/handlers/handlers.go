@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"time"
@@ -58,7 +59,7 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println(h.cfg.ResultURL)
+	log.Println(h.cfg.ResultURL)
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
 		url, err := h.storage.Get(id)
@@ -107,7 +108,7 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
@@ -128,28 +129,28 @@ func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
 	var batches []structures.BatchEntity
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("Batch: failed to read from body")
+		log.Println("Batch: failed to read from body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	err = json.Unmarshal(body, &batches)
-	fmt.Println("Batch request body", batches)
+	log.Println("Batch request body", batches)
 	if err != nil {
-		fmt.Println("Batch: failed to unmarshal request")
+		log.Println("Batch: failed to unmarshal request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	result, err := h.storage.Batch(batches)
 	if err != nil {
-		fmt.Println("Batch: failed to save to database")
+		log.Println("Batch: failed to save to database")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	response, err := json.Marshal(result)
-	fmt.Println("Batch response", string(response))
+	log.Println("Batch response", string(response))
 	if err != nil {
-		fmt.Println("Batch: failed to marshal response")
+		log.Println("Batch: failed to marshal response")
 		return
 	}
 
@@ -159,7 +160,7 @@ func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handlers) PingDataBase(w http.ResponseWriter, _ *http.Request) {
+func (h *Handlers) PingDataBase(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("pgx", h.cfg.DataBaseString)
 	if err != nil {
@@ -168,6 +169,7 @@ func (h *Handlers) PingDataBase(w http.ResponseWriter, _ *http.Request) {
 	}
 	defer db.Close()
 
+	ctx := r.Context()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	if err = db.PingContext(ctx); err != nil {

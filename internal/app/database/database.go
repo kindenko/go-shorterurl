@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 
-	"fmt"
 	"log"
 
 	"context"
@@ -29,7 +28,7 @@ type PostgresDB struct {
 func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
 	var short string
 
-	query := "insert into shorterurl(short, long) values ($1, $2)"
+	query := "insert into shorterurl(shortURL, longURL) values ($1, $2)"
 	_, err := p.db.Exec(query, shortURL, fullURL)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -48,18 +47,17 @@ func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
 
 func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
 	var short string
-	query := "select short from shorterurl where long=$1"
+	query := "select short from shorterurl where longURL=$1"
 	row := p.db.QueryRow(query, fullURL)
 	if err := row.Scan(&short); err != nil {
 		return "", err
 	}
-	log.Println("Забрали шорт", short)
 	return short, nil
 }
 
 func (p PostgresDB) Get(shortURL string) (string, error) {
 	var long string
-	query := "select long from shorterurl where short=$1"
+	query := "select long from shorterurl where shortURL=$1"
 	row := p.db.QueryRow(query, shortURL)
 	if err := row.Scan(&long); err != nil {
 		log.Println("Failed to get link from db")
@@ -76,20 +74,20 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 	defer cancel()
 	tx, err := p.db.Begin()
 	if err != nil {
-		fmt.Println("Error while begin tx")
+		log.Println("Error while begin tx")
 		return resultEntities, err
 	}
 	for _, v := range entities {
 		short := utils.RandString(v.OriginalURL)
-		_, err = tx.ExecContext(ctx, "insert into "+"shorterurl"+"(short, long) values ($1, $2)", short, v.OriginalURL)
+		_, err = tx.ExecContext(ctx, "insert into shorterurl (shortURL, longURL) values ($1, $2)", short, v.OriginalURL)
 		if err != nil {
-			fmt.Println("Error while ExecContext", err)
+			log.Println("Error while ExecContext", err)
 			tx.Rollback()
 			return resultEntities, nil
 		}
 		// костылище, не смог исправить
 		if p.cfg.ResultURL == "" {
-			fmt.Println(p.cfg.ResultURL)
+			log.Println(p.cfg.ResultURL)
 			ResultURL = "http://localhost:8080"
 		} else {
 			ResultURL = p.cfg.ResultURL
@@ -115,7 +113,7 @@ func InitDB(path string, baseurl string) *PostgresDB {
 		return nil
 	}
 
-	_, err = db.Exec("create table if not exists shorterurl(id serial not null, short text not null not null, long text not null); create unique index on shorterurl (long)")
+	_, err = db.Exec("create table if not exists shorterurl(id serial not null, shortURL text not null not null, longURL text not null); create unique index on shorterurl (long)")
 	if err != nil {
 		log.Println(err)
 		return nil

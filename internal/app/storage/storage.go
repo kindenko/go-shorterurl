@@ -13,6 +13,7 @@ type MyStorage interface {
 	Save(fullURL string, shortURL string) (string, error)
 	Get(shortURL string) (string, error)
 	Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error)
+	Ping() error
 }
 
 type storage struct {
@@ -65,4 +66,8 @@ func (s *storage) Get(short string) (string, error) {
 
 func (s *storage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
 	return s.defaultStorage.Batch(entities)
+}
+
+func (s *storage) Ping() error {
+	return nil
 }

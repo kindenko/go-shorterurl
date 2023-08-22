@@ -32,3 +32,7 @@ func (m *MemoryStorage) Get(shortURL string) (string, error) {
 func (m *MemoryStorage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
 	panic("Missing method")
 }
+
+func (m *MemoryStorage) Ping() error {
+	return nil
+}

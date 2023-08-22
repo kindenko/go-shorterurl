@@ -112,3 +112,7 @@ func LoadFromFile(fileName string) (map[string]string, error) {
 	}
 	return data, nil
 }
+
+func (f *File) Ping() error {
+	return nil
+}

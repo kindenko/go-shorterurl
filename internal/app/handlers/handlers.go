@@ -2,15 +2,11 @@ package handlers
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-
-	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	e "github.com/kindenko/go-shorterurl/internal/app/errors"
@@ -160,22 +156,34 @@ func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handlers) PingDataBase(w http.ResponseWriter, r *http.Request) {
-
-	db, err := sql.Open("pgx", h.cfg.DataBaseString)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func (h *Handlers) Ping(w http.ResponseWriter, r *http.Request) {
+	if err := h.storage.Ping(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer db.Close()
-
-	ctx := r.Context()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	if err = db.PingContext(ctx); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 }
+
+// func (h *Handlers) PingDataBase(w http.ResponseWriter, r *http.Request) {
+
+// 	// if err := p.db.Ping(); err != nil {
+// 	// 	return err
+// 	// }
+
+// 	db, err := sql.Open("pgx", h.cfg.DataBaseString)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	defer db.Close()
+
+// 	//ctx := r.Context()
+// 	ctx, cancel :=  context.WithTimeout(context.Background(), 1*time.Second)
+// 	defer cancel()
+// 	if err = db.PingContext(ctx); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// }

@@ -102,6 +102,13 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 	return resultEntities, tx.Commit()
 }
 
+func (p PostgresDB) Ping() error {
+	if err := p.db.Ping(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func InitDB(path string, baseurl string) *PostgresDB {
 	if path == "" {
 		return nil

@@ -30,7 +30,7 @@ func Init(cfg *config.AppConfig) MyStorage {
 			s.defaultStorage = database.InitDB(cfg.DataBaseString, cfg.ResultURL)
 			return &s
 		}
-	case cfg.FilePATH != "/tmp/short-url-db.json":
+	case cfg.FilePATH != "":
 		{
 			log.Println("FILE")
 			s.defaultStorage = InitFileDB(cfg.FilePATH)

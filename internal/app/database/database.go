@@ -47,7 +47,7 @@ func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
 
 func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
 	var short string
-	query := "select short from shorterurl where longURL=$1"
+	query := "select shortURL from shorterurl where longURL=$1"
 	row := p.db.QueryRow(query, fullURL)
 	if err := row.Scan(&short); err != nil {
 		return "", err

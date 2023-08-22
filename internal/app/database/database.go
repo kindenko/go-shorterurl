@@ -120,7 +120,7 @@ func InitDB(path string, baseurl string) *PostgresDB {
 		return nil
 	}
 
-	_, err = db.Exec("create table if not exists shorterurl(id serial not null, shortURL text not null not null, longURL text not null); create unique index on shorterurl (long)")
+	_, err = db.Exec("create table if not exists shorterurl(id serial not null, shortURL text not null not null, longURL text not null); create unique index on shorterurl (longURL)")
 	if err != nil {
 		log.Println(err)
 		return nil

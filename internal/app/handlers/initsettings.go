@@ -17,7 +17,7 @@ type Handlers struct {
 	mux     *chi.Mux
 }
 
-func NewHandlers(cfg *config.AppConfig, mux *chi.Mux) *Handlers {
+func NewHandlers(cfg *config.AppConfig) *Handlers {
 
 	c := cfg
 	storage := storage.Init(c)
@@ -25,20 +25,19 @@ func NewHandlers(cfg *config.AppConfig, mux *chi.Mux) *Handlers {
 	return &Handlers{
 		cfg:     cfg,
 		storage: storage,
-		mux:     mux,
+		mux:     chi.NewRouter(),
 	}
 }
 
 func (h *Handlers) Init() {
-	r := chi.NewRouter()
-	r.Use(logger.WithLogging)
-	r.Use(zip.MiddlewareCompressGzip)
-	r.Use(middleware.Compress(5, "text/html",
+	h.mux.Use(logger.WithLogging)
+	h.mux.Use(zip.MiddlewareCompressGzip)
+	h.mux.Use(middleware.Compress(5, "text/html",
 		"application/x-gzip",
 		"text/plain",
 		"application/json"))
 
-	r.Route("/", func(r chi.Router) {
+	h.mux.Route("/", func(r chi.Router) {
 		r.Post("/", h.PostHandler)
 		r.Post("/api/shorten", h.PostJSONHandler)
 		r.Get("/{shortUrl}", h.GetHandler)

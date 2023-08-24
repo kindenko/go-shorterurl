@@ -13,13 +13,12 @@ import (
 	"github.com/kindenko/go-shorterurl/internal/app/zip"
 )
 
-var urls = make(map[string]string)
-
 func main() {
 	conf := config.NewCfg()
 
 	newHandlers := handlers.NewHandlers(conf)
 
+	// добавиь в handlers
 	r := chi.NewRouter()
 	r.Use(logger.WithLogging)
 	r.Use(zip.MiddlewareCompressGzip)

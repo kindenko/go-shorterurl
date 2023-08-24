@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/kindenko/go-shorterurl/config"
-	e "github.com/kindenko/go-shorterurl/internal/app/errors"
+	er "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
 
@@ -39,7 +39,7 @@ func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
 				log.Println("faled search previously saved url")
 				return "", nil
 			}
-			return short, e.ErrUniqueValue
+			return short, er.ErrUniqueValue
 		}
 	}
 	return shortURL, nil
@@ -109,12 +109,12 @@ func (p PostgresDB) Ping() error {
 	return nil
 }
 
-func InitDB(path string, baseurl string) *PostgresDB {
-	if path == "" {
+func InitDB(cfg config.AppConfig) *PostgresDB {
+	if cfg.DataBaseString == "" {
 		return nil
 	}
 
-	db, err := sql.Open("pgx", path)
+	db, err := sql.Open("pgx", cfg.DataBaseString)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -126,5 +126,6 @@ func InitDB(path string, baseurl string) *PostgresDB {
 		return nil
 	}
 
-	return &PostgresDB{db: db}
+	return &PostgresDB{db: db,
+		cfg: cfg}
 }

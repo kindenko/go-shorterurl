@@ -10,6 +10,8 @@ type Handlers struct {
 	storage storage.MyStorage
 }
 
+// часть мейна добить
+
 func NewHandlers(cfg *config.AppConfig) *Handlers {
 
 	c := cfg

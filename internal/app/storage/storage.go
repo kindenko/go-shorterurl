@@ -20,14 +20,15 @@ type storage struct {
 	defaultStorage MyStorage
 }
 
+// указатель
 func Init(cfg *config.AppConfig) MyStorage {
 	var s storage
 
 	switch {
 	case cfg.DataBaseString != "":
 		{
-			log.Println("DB")
-			s.defaultStorage = database.InitDB(cfg.DataBaseString, cfg.ResultURL)
+			log.Println("DB") // значение а не указатель
+			s.defaultStorage = database.InitDB(*cfg)
 			return &s
 		}
 	case cfg.FilePATH != "":

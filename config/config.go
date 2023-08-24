@@ -18,6 +18,7 @@ type AppConfig struct {
 	ResultURL      string `env:"BASE_URL"`
 	FilePATH       string `env:"FILE_STORAGE_PATH"`
 	DataBaseString string `env:"DATABASE_DSN"`
+	// возможно добавить configDB
 }
 
 var cfg AppConfig

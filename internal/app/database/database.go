@@ -25,6 +25,8 @@ type PostgresDB struct {
 	cfg config.AppConfig
 }
 
+var ErrNoBatchByUserID = errors.New("no batches by provided userID")
+
 func (p PostgresDB) Save(fullURL string, shortURL string, user string) (string, error) {
 	var short string
 
@@ -125,7 +127,7 @@ func (p PostgresDB) GetBatchByUserID(user string) ([]structures.BatchEntity, err
 		result = append(result, entity)
 	}
 	if len(result) == 0 {
-		return nil, err
+		return nil, ErrNoBatchByUserID
 	}
 	return result, nil
 }

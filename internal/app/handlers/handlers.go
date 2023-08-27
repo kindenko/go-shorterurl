@@ -87,6 +87,8 @@ func (h *Handlers) GetUsersURLs(w http.ResponseWriter, r *http.Request) {
 	batch, err := h.storage.GetBatchByUserID(userID)
 	if err != nil {
 		log.Println("Failed to fetch user data")
+		w.WriteHeader(http.StatusNoContent)
+		return
 	}
 
 	response, err := json.Marshal(batch)

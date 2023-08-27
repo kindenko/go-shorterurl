@@ -32,6 +32,7 @@ func main() {
 		r.Post("/api/shorten", newHandlers.PostJSONHandler)
 		r.Get("/{shortUrl}", newHandlers.GetHandler)
 		r.Get("/ping", newHandlers.Ping)
+		r.Get("/api/user/urls", newHandlers.GetUsersURLs)
 		r.Post("/api/shorten/batch", newHandlers.Batch)
 	})
 

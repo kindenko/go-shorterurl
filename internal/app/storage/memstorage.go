@@ -14,7 +14,7 @@ func InitMemory() *MemoryStorage {
 	}
 }
 
-func (m *MemoryStorage) Save(fullURL string, shortURL string) (string, error) {
+func (m *MemoryStorage) Save(fullURL string, shortURL string, user string) (string, error) {
 	m.store[shortURL] = fullURL
 
 	return shortURL, nil
@@ -29,7 +29,11 @@ func (m *MemoryStorage) Get(shortURL string) (string, error) {
 	return "Missing url", nil
 }
 
-func (m *MemoryStorage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+func (m *MemoryStorage) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
+	panic("Missing method")
+}
+
+func (m *MemoryStorage) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
 	panic("Missing method")
 }
 

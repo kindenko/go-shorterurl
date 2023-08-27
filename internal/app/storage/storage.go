@@ -10,9 +10,10 @@ import (
 )
 
 type MyStorage interface {
-	Save(fullURL string, shortURL string) (string, error)
+	Save(fullURL string, shortURL string, user string) (string, error)
 	Get(shortURL string) (string, error)
-	Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error)
+	Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error)
+	GetBatchByUserID(userID string) ([]structures.BatchEntity, error)
 	Ping() error
 }
 
@@ -44,8 +45,8 @@ func Init(cfg *config.AppConfig) MyStorage {
 	return &s
 }
 
-func (s *storage) Save(full string, short string) (string, error) {
-	short, err := s.defaultStorage.Save(full, short)
+func (s *storage) Save(full string, short string, user string) (string, error) {
+	short, err := s.defaultStorage.Save(full, short, user)
 	if err == e.ErrUniqueValue {
 		return short, err
 	}
@@ -65,8 +66,12 @@ func (s *storage) Get(short string) (string, error) {
 	return full, nil
 }
 
-func (s *storage) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
-	return s.defaultStorage.Batch(entities)
+func (s *storage) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
+	return s.defaultStorage.Batch(entities, user)
+}
+
+func (s *storage) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
+	return s.defaultStorage.GetBatchByUserID(user)
 }
 
 func (s *storage) Ping() error {

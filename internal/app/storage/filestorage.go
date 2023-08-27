@@ -25,7 +25,7 @@ func InitFileDB(fileStoragePath string) *File {
 	}
 }
 
-func (f *File) Save(fullURL string, shortURL string) (string, error) {
+func (f *File) Save(fullURL string, shortURL string, user string) (string, error) {
 	var fs FileStorage
 
 	fs.Original = fullURL
@@ -69,7 +69,11 @@ func (f *File) Get(shortURL string) (string, error) {
 
 }
 
-func (f *File) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+func (f *File) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
+	panic("Missing method")
+}
+
+func (f *File) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
 	panic("Missing method")
 }
 

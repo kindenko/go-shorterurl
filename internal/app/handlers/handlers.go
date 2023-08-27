@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/kindenko/go-shorterurl/internal/app/auth"
 	e "github.com/kindenko/go-shorterurl/internal/app/errors"
 	"github.com/kindenko/go-shorterurl/internal/app/structures"
 	"github.com/kindenko/go-shorterurl/internal/app/utils"
@@ -32,10 +33,16 @@ func (h *Handlers) PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Empty body!", http.StatusBadRequest)
 		return
 	}
+
+	userID, err := auth.GetUserToken(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
 	url := string(body)
 	short := utils.RandString(url)
 
-	shortURL, err := h.storage.Save(url, short)
+	shortURL, err := h.storage.Save(url, short, userID)
 	if err == e.ErrUniqueValue {
 		resp := h.cfg.ResultURL + "/" + shortURL
 		w.Header().Set("Content-Type", "application/json")
@@ -70,6 +77,27 @@ func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handlers) GetUsersURLs(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserToken(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	batch, err := h.storage.GetBatchByUserID(userID)
+	if err != nil {
+		log.Println("Failed to fetch user data")
+	}
+
+	response, err := json.Marshal(batch)
+	if err != nil {
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
+
 func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var req RequestJSON
@@ -89,7 +117,12 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 		url := string(req.URL)
 		short := utils.RandString(url)
 
-		shortURL, err := h.storage.Save(url, short)
+		userID, err := auth.GetUserToken(w, r)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		shortURL, err := h.storage.Save(url, short, userID)
 		if err == e.ErrUniqueValue {
 			result := ResponseJSON{Result: h.cfg.ResultURL + "/" + shortURL}
 			resp, err := json.Marshal(result)
@@ -122,6 +155,11 @@ func (h *Handlers) PostJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserToken(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
 	var batches []structures.BatchEntity
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -137,7 +175,7 @@ func (h *Handlers) Batch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	result, err := h.storage.Batch(batches)
+	result, err := h.storage.Batch(batches, userID)
 	if err != nil {
 		log.Println("Batch: failed to save to database")
 		w.WriteHeader(http.StatusBadRequest)

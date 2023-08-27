@@ -25,11 +25,11 @@ type PostgresDB struct {
 	cfg config.AppConfig
 }
 
-func (p PostgresDB) Save(fullURL string, shortURL string) (string, error) {
+func (p PostgresDB) Save(fullURL string, shortURL string, user string) (string, error) {
 	var short string
 
-	query := "insert into shorterurl(shortURL, longURL) values ($1, $2)"
-	_, err := p.db.Exec(query, shortURL, fullURL)
+	query := "insert into shorterurl(shortURL, longURL, userID) values ($1, $2, $3)"
+	_, err := p.db.Exec(query, shortURL, fullURL, user)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -66,7 +66,7 @@ func (p PostgresDB) Get(shortURL string) (string, error) {
 	return long, nil
 }
 
-func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.BatchEntity, error) {
+func (p PostgresDB) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
 	var resultEntities []structures.BatchEntity
 	var ResultURL string
 
@@ -79,7 +79,7 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 	}
 	for _, v := range entities {
 		short := utils.RandString(v.OriginalURL)
-		_, err = tx.ExecContext(ctx, "insert into shorterurl (shortURL, longURL) values ($1, $2)", short, v.OriginalURL)
+		_, err = tx.ExecContext(ctx, "insert into shorterurl (shortURL, longURL, userID) values ($1, $2, $3)", short, v.OriginalURL, user)
 		if err != nil {
 			log.Println("Error while ExecContext", err)
 			tx.Rollback()
@@ -102,6 +102,34 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity) ([]structures.Batch
 	return resultEntities, tx.Commit()
 }
 
+func (p PostgresDB) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
+	var (
+		entity structures.BatchEntity
+		result []structures.BatchEntity
+	)
+	query := "select shortURL, longURL from shorterurl where userID=$1"
+	rows, err := p.db.Query(query, user)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&entity.ShortURL, &entity.OriginalURL)
+		if err != nil {
+			break
+		}
+		entity.ShortURL = p.cfg.ResultURL + "/" + entity.ShortURL
+		result = append(result, entity)
+	}
+	if len(result) == 0 {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (p PostgresDB) Ping() error {
 	if err := p.db.Ping(); err != nil {
 		return err
@@ -120,7 +148,7 @@ func InitDB(cfg config.AppConfig) *PostgresDB {
 		return nil
 	}
 
-	_, err = db.Exec("create table if not exists shorterurl(id serial not null, shortURL text not null not null, longURL text not null); create unique index on shorterurl (longURL)")
+	_, err = db.Exec("create table if not exists shorterurl(id serial not null primary key, shortURL text not null not null, longURL text not null, userID text not null); create unique index on shorterurl (longURL)")
 	if err != nil {
 		log.Println(err)
 		return nil

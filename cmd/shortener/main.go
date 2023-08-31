@@ -30,10 +30,14 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", newHandlers.PostHandler)
 		r.Post("/api/shorten", newHandlers.PostJSONHandler)
+		r.Post("/api/shorten/batch", newHandlers.Batch)
+
 		r.Get("/{shortUrl}", newHandlers.GetHandler)
 		r.Get("/ping", newHandlers.Ping)
 		r.Get("/api/user/urls", newHandlers.GetUsersURLs)
-		r.Post("/api/shorten/batch", newHandlers.Batch)
+
+		r.Delete("/api/user/urls", newHandlers.DeleteURLs)
+
 	})
 
 	log.Fatal(http.ListenAndServe(conf.Host, r))

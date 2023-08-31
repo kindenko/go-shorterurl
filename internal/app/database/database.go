@@ -25,8 +25,6 @@ type PostgresDB struct {
 	cfg config.AppConfig
 }
 
-var ErrNoBatchByUserID = errors.New("no batches by provided userID")
-
 func (p PostgresDB) Save(fullURL string, shortURL string, user string) (string, error) {
 	var short string
 
@@ -57,15 +55,18 @@ func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
 	return short, nil
 }
 
-func (p PostgresDB) Get(shortURL string) (string, error) {
+func (p PostgresDB) Get(shortURL string) (string, int, error) {
 	var long string
-	query := "select longURL from shorterurl where shortURL=$1"
+	var is_deleted int
+	query := "select longURL, is_deleted  from shorterurl where shortURL=$1"
 	row := p.db.QueryRow(query, shortURL)
-	if err := row.Scan(&long); err != nil {
+	if err := row.Scan(&long, &is_deleted); err != nil {
 		log.Println("Failed to get link from db")
-		return "Error in Get from db", err
+		log.Println(err)
+		return "Error in Get from db", 0, err
 	}
-	return long, nil
+
+	return long, is_deleted, nil
 }
 
 func (p PostgresDB) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
@@ -104,6 +105,8 @@ func (p PostgresDB) Batch(entities []structures.BatchEntity, user string) ([]str
 	return resultEntities, tx.Commit()
 }
 
+var ErrNoBatchByUserID = errors.New("no batches by provided userID")
+
 func (p PostgresDB) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
 	var (
 		entity structures.BatchEntity
@@ -132,6 +135,20 @@ func (p PostgresDB) GetBatchByUserID(user string) ([]structures.BatchEntity, err
 	return result, nil
 }
 
+func (p PostgresDB) DeleteByUserIDAndShort(userID string, short string) error {
+	query := "update shorterurl set is_deleted=1::bit WHERE userID=$1 and shorturl=$2"
+	rows, err := p.db.Exec(query, userID, short)
+	if err != nil {
+		return err
+	}
+	if r, err := rows.RowsAffected(); err != nil || r != int64(1) {
+		log.Println("0 rows affected in delete")
+		return err
+	}
+	log.Printf("Marked as deleted link %s", short)
+	return nil
+}
+
 func (p PostgresDB) Ping() error {
 	if err := p.db.Ping(); err != nil {
 		return err
@@ -150,7 +167,7 @@ func InitDB(cfg config.AppConfig) *PostgresDB {
 		return nil
 	}
 
-	_, err = db.Exec("create table if not exists shorterurl(id serial not null primary key, shortURL text not null not null, longURL text not null, userID text not null); create unique index on shorterurl (longURL)")
+	_, err = db.Exec("create table if not exists shorterurl(id serial not null primary key, shortURL text not null not null, longURL text not null, userID text not null, is_deleted BIT DEFAULT 0::bit NOT NULL); create unique index on shorterurl (longURL)")
 	if err != nil {
 		log.Println(err)
 		return nil

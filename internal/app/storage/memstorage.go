@@ -20,13 +20,13 @@ func (m *MemoryStorage) Save(fullURL string, shortURL string, user string) (stri
 	return shortURL, nil
 }
 
-func (m *MemoryStorage) Get(shortURL string) (string, error) {
+func (m *MemoryStorage) Get(shortURL string) (string, int, error) {
 	long, ok := m.store[shortURL]
 
 	if ok {
-		return long, nil
+		return long, 0, nil
 	}
-	return "Missing url", nil
+	return "Missing url", 0, nil
 }
 
 func (m *MemoryStorage) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
@@ -34,6 +34,10 @@ func (m *MemoryStorage) Batch(entities []structures.BatchEntity, user string) ([
 }
 
 func (m *MemoryStorage) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
+	panic("Missing method")
+}
+
+func (m *MemoryStorage) DeleteByUserIDAndShort(userID string, short string) error {
 	panic("Missing method")
 }
 

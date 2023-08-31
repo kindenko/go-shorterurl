@@ -11,9 +11,10 @@ import (
 
 type MyStorage interface {
 	Save(fullURL string, shortURL string, user string) (string, error)
-	Get(shortURL string) (string, error)
+	Get(shortURL string) (string, int, error)
 	Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error)
 	GetBatchByUserID(userID string) ([]structures.BatchEntity, error)
+	DeleteByUserIDAndShort(userID string, shortURL string) error
 	Ping() error
 }
 
@@ -58,12 +59,12 @@ func (s *storage) Save(full string, short string, user string) (string, error) {
 	return short, nil
 }
 
-func (s *storage) Get(short string) (string, error) {
-	full, err := s.defaultStorage.Get(short)
+func (s *storage) Get(short string) (string, int, error) {
+	full, is_deleted, err := s.defaultStorage.Get(short)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
-	return full, nil
+	return full, is_deleted, nil
 }
 
 func (s *storage) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
@@ -72,6 +73,10 @@ func (s *storage) Batch(entities []structures.BatchEntity, user string) ([]struc
 
 func (s *storage) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
 	return s.defaultStorage.GetBatchByUserID(user)
+}
+
+func (s *storage) DeleteByUserIDAndShort(userID string, short string) error {
+	return s.defaultStorage.DeleteByUserIDAndShort(userID, short)
 }
 
 func (s *storage) Ping() error {

@@ -42,11 +42,11 @@ func (f *File) Save(fullURL string, shortURL string, user string) (string, error
 	return fs.Short, err
 }
 
-func (f *File) Get(shortURL string) (string, error) {
+func (f *File) Get(shortURL string) (string, int, error) {
 
 	file, err := os.OpenFile(f.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	defer file.Close()
 
@@ -65,7 +65,7 @@ func (f *File) Get(shortURL string) (string, error) {
 	}
 	original := data[shortURL]
 
-	return original, nil
+	return original, 0, nil
 
 }
 
@@ -74,6 +74,10 @@ func (f *File) Batch(entities []structures.BatchEntity, user string) ([]structur
 }
 
 func (f *File) GetBatchByUserID(user string) ([]structures.BatchEntity, error) {
+	panic("Missing method")
+}
+
+func (f *File) DeleteByUserIDAndShort(userID string, short string) error {
 	panic("Missing method")
 }
 

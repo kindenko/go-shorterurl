@@ -65,13 +65,13 @@ func (h *Handlers) GetHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println(h.cfg.ResultURL)
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[1:]
-		url, is_deleted, err := h.storage.Get(id)
+		url, isDeleted, err := h.storage.Get(id)
 		if err != nil {
 			http.Error(w, "Bad URL", http.StatusBadRequest)
 			return
 		}
 
-		if is_deleted == 1 {
+		if isDeleted == 1 {
 			w.WriteHeader(http.StatusGone)
 			return
 		}
@@ -233,7 +233,7 @@ func (h *Handlers) MarkAsDeleted(inputShort chan string, userID string) {
 	for v := range inputShort {
 		err := h.storage.DeleteByUserIDAndShort(userID, v)
 		if err != nil {
-			log.Print("Failed to mark deleted by short %s", v)
+			log.Print("Failed to mark deleted by short")
 		}
 	}
 }

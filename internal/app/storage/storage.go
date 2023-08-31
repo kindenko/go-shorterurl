@@ -60,11 +60,11 @@ func (s *storage) Save(full string, short string, user string) (string, error) {
 }
 
 func (s *storage) Get(short string) (string, int, error) {
-	full, is_deleted, err := s.defaultStorage.Get(short)
+	full, isDeleted, err := s.defaultStorage.Get(short)
 	if err != nil {
 		return "", 0, err
 	}
-	return full, is_deleted, nil
+	return full, isDeleted, nil
 }
 
 func (s *storage) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {

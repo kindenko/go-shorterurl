@@ -57,16 +57,16 @@ func (p PostgresDB) GetShortURL(fullURL string) (string, error) {
 
 func (p PostgresDB) Get(shortURL string) (string, int, error) {
 	var long string
-	var is_deleted int
+	var isDeleted int
 	query := "select longURL, is_deleted  from shorterurl where shortURL=$1"
 	row := p.db.QueryRow(query, shortURL)
-	if err := row.Scan(&long, &is_deleted); err != nil {
+	if err := row.Scan(&long, &isDeleted); err != nil {
 		log.Println("Failed to get link from db")
 		log.Println(err)
 		return "Error in Get from db", 0, err
 	}
 
-	return long, is_deleted, nil
+	return long, isDeleted, nil
 }
 
 func (p PostgresDB) Batch(entities []structures.BatchEntity, user string) ([]structures.BatchEntity, error) {
